@@ -1,0 +1,42 @@
+#!/bin/bash
+
+## Echo Arguments
+echo "MySQL Host: $1"
+echo "MySQL User: $2"
+echo "MySQL PW: $3"
+echo "# of Messages to Import: $4"
+filename="/tmp/database_import.csv"
+
+timestamp() {
+  date +"%Y-%m-%d %H:%M:%S"
+}
+
+echo "$(timestamp): Creating CSV for $4 Messages (Batches of 10000)"
+
+##bundle exec rake messages:create_csv[$4,$filename]
+
+echo "$(timestamp): Created $4 Messages in CSV"
+echo "$(timestamp): Loading $4 Messages into Database"
+
+##mysql --host=$1 -u$2 -p$3 << EOF
+  ##TRUNCATE TABLE message_store.messages;
+	##LOAD DATA LOCAL INFILE "$filename" INTO TABLE message_store.messages FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\n';
+##EOF
+##rm $filename
+##echo "$(timestamp): Completed Loading $4 Messages into Database"
+
+declare -a msg_metadata=("activities" "assignments" "attachments" "labels")
+for table in "${msg_metadata[@]}"
+do
+  echo "$(timestamp): Creating CSV for Message $table (Batches of 10000)"
+  bundle exec rake message_metadata:create_csv[$4,"/tmp/import_msg_activity_$table.csv",$table]
+  echo "$(timestamp): Loading Message Metadata for $table into Database"
+  ./script/mysql_load_msg_metadata $1 $2 $3 $table
+  rm "/tmp/import_msg_activity_$table.csv"
+done
+
+echo "$(timestamp): Completed Loading Message Metadata"
+
+
+
+

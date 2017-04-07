@@ -1,0 +1,10 @@
+#!/bin/bash
+timestamp() {
+  date +"%Y-%m-%d %H:%M:%S"
+}
+echo "$(timestamp): Loading Table: $4"
+mysql --host=$1 -u$2 -p$3 << EOF
+	TRUNCATE TABLE message_store.$4;
+  LOAD DATA LOCAL INFILE "/tmp/import_msg_activity_$4.csv" INTO TABLE message_store.$4 FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\n';
+EOF
+echo "$(timestamp): Finished Table: $4"

@@ -11,7 +11,7 @@ class MessagesController < ApplicationController
   private
 
   def present_many(messages)
-    MessagePresenter.from_array(messages)
+    MessagePresenter.from_array_optimized(messages)
   end
 
   def search
